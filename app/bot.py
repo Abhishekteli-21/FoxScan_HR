@@ -82,35 +82,51 @@ def load_knowledge() -> str:
     for name in ("faq.md", "handbook.md", "hrone_howto.md"):
         path = KNOWLEDGE_DIR / name
         if path.exists():
-            parts.append(f"<source name=\"{name}\">\n{path.read_text(encoding='utf-8')}\n</source>")
+            parts.append(
+                f'<source name="{name}">\n{path.read_text(encoding="utf-8")}\n</source>'
+            )
     return "\n\n".join(parts)
+
+
+class ConfigError(RuntimeError):
+    """Raised when .env is missing or wrong — shown as a readable message in the UI."""
 
 
 class HRAssistant:
     def __init__(self) -> None:
         self.sessions: dict[str, list[dict]] = {}
+        self.client = None
+        self.model = ""
         self.reload_knowledge()
 
+    def _ensure_client(self) -> None:
+        """Create the LLM client on first use, so a bad .env never crashes startup."""
+        if self.client is not None:
+            return
         if PROVIDER == "anthropic":
             import anthropic
 
-            self.client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+            if not os.environ.get("ANTHROPIC_API_KEY"):
+                raise ConfigError("ANTHROPIC_API_KEY is missing — add it to .env")
+            self.client = anthropic.Anthropic()
             self.model = MODEL or "claude-opus-5"
         elif PROVIDER in OPENAI_COMPAT_PRESETS:
             from openai import OpenAI
 
             base_url, key_env, default_model = OPENAI_COMPAT_PRESETS[PROVIDER]
             if not base_url:
-                raise RuntimeError("BOT_PROVIDER=custom requires BOT_BASE_URL in .env")
+                raise ConfigError("BOT_PROVIDER=custom requires BOT_BASE_URL in .env")
             api_key = os.environ.get(key_env, "")
             if not api_key:
-                raise RuntimeError(f"BOT_PROVIDER={PROVIDER} requires {key_env} in .env")
-            self.client = OpenAI(base_url=base_url, api_key=api_key)
+                raise ConfigError(f"BOT_PROVIDER={PROVIDER} requires {key_env} in .env")
             self.model = MODEL or default_model
             if not self.model:
-                raise RuntimeError(f"BOT_PROVIDER={PROVIDER} requires BOT_MODEL in .env")
+                raise ConfigError(f"BOT_PROVIDER={PROVIDER} requires BOT_MODEL in .env")
+            self.client = OpenAI(base_url=base_url, api_key=api_key)
         else:
-            raise RuntimeError(f"Unknown BOT_PROVIDER: {PROVIDER}")
+            raise ConfigError(
+                f"Unknown BOT_PROVIDER '{PROVIDER}' — use anthropic, gemini, groq, openrouter, or custom"
+            )
 
     def reload_knowledge(self) -> None:
         self.knowledge = "KNOWLEDGE SOURCES:\n\n" + load_knowledge()
@@ -120,6 +136,7 @@ class HRAssistant:
 
     def stream_reply(self, session_id: str, user_message: str):
         """Yield text chunks for the assistant's reply and record the turn."""
+        self._ensure_client()
         history = self._history(session_id)
         history.append({"role": "user", "content": user_message})
 
@@ -139,7 +156,11 @@ class HRAssistant:
         # first request.
         system = [
             {"type": "text", "text": INSTRUCTIONS},
-            {"type": "text", "text": self.knowledge, "cache_control": {"type": "ephemeral"}},
+            {
+                "type": "text",
+                "text": self.knowledge,
+                "cache_control": {"type": "ephemeral"},
+            },
         ]
         with self.client.messages.stream(
             model=self.model,
@@ -156,7 +177,9 @@ class HRAssistant:
     def _stream_openai_compat(self, history: list[dict]):
         # One system message; instructions + knowledge first and byte-stable across
         # requests so Gemini's implicit caching can latch onto the shared prefix.
-        messages = [{"role": "system", "content": INSTRUCTIONS + "\n\n" + self.knowledge}]
+        messages = [
+            {"role": "system", "content": INSTRUCTIONS + "\n\n" + self.knowledge}
+        ]
         messages += history
         stream = self.client.chat.completions.create(
             model=self.model,
@@ -166,7 +189,11 @@ class HRAssistant:
         )
         parts: list[str] = []
         for chunk in stream:
-            if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+            if (
+                chunk.choices
+                and chunk.choices[0].delta
+                and chunk.choices[0].delta.content
+            ):
                 text = chunk.choices[0].delta.content
                 parts.append(text)
                 yield text

@@ -28,7 +28,9 @@ import requests
 from bs4 import BeautifulSoup
 
 BASE = "https://employee-help.hrone.cloud"
-HEADERS = {"User-Agent": "UrbanRoof-HR-KB-builder/1.0 (internal knowledge base; contact: hr@urbanroof.in)"}
+HEADERS = {
+    "User-Agent": "UrbanRoof-HR-KB-builder/1.0 (internal knowledge base; contact: hr@urbanroof.in)"
+}
 DELAY_SECONDS = 1.0
 
 
@@ -50,7 +52,9 @@ def urls_from_sitemap() -> list[str]:
             root = ET.fromstring(resp.content)
         except ET.ParseError:
             continue
-        locs = [el.text.strip() for el in root.iter() if el.tag.endswith("loc") and el.text]
+        locs = [
+            el.text.strip() for el in root.iter() if el.tag.endswith("loc") and el.text
+        ]
         if locs:
             print(f"Found sitemap at {path} with {len(locs)} URLs")
             return locs
@@ -110,7 +114,11 @@ def main() -> None:
 
     urls = urls_from_sitemap() or crawl_links(args.max_pages)
     if not urls:
-        print("Could not reach the portal or find any pages. Are you on a network that can open " + BASE + " ?")
+        print(
+            "Could not reach the portal or find any pages. Are you on a network that can open "
+            + BASE
+            + " ?"
+        )
         return
 
     sections = []
@@ -124,7 +132,9 @@ def main() -> None:
         f.write("# HROne Help Portal — crawled articles (review before use)\n\n")
         f.write("\n\n---\n\n".join(sections))
     print(f"\nWrote {len(sections)} articles to {args.out}")
-    print("Review + curate them, then merge the good ones into knowledge/hrone_howto.md")
+    print(
+        "Review + curate them, then merge the good ones into knowledge/hrone_howto.md"
+    )
 
 
 if __name__ == "__main__":

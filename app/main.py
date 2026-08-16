@@ -89,7 +89,9 @@ def chat(body: ChatIn):
             for chunk in assistant.stream_reply(body.session_id, body.message):
                 yield f"data: {json.dumps({'text': chunk})}\n\n"
             yield f"data: {json.dumps({'done': True})}\n\n"
-        except Exception as exc:  # surface config errors (e.g. missing API key) to the UI
+        except (
+            Exception
+        ) as exc:  # surface config errors (e.g. missing API key) to the UI
             yield f"data: {json.dumps({'error': str(exc)})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
@@ -112,7 +114,8 @@ def escalate(body: EscalateIn):
         subject=f"[HR Assistant] Escalation: {body.question[:80] or 'employee needs help'}",
         body=(
             f"Employee: {body.employee_name or 'not given'} ({body.employee_contact or 'no contact'})\n"
-            f"Question: {body.question}\n\nConversation so far:\n\n" + "\n\n".join(lines)
+            f"Question: {body.question}\n\nConversation so far:\n\n"
+            + "\n\n".join(lines)
         ),
     )
     return {"ok": True, "emailed": emailed}

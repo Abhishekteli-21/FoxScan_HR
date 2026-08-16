@@ -90,6 +90,17 @@ the useful ones into `knowledge/hrone_howto.md`, then `POST /api/reload`.
   **Render** free tier (sleeps after 15 min idle, ~1 min cold start). Set the `.env`
   values as Space/Render secrets. No GPU needed anywhere — the model runs provider-side.
 
+## Tests & code quality
+
+```bash
+python tests/e2e_smoke.py   # full end-to-end test with a mock LLM — no API key needed
+ruff check . && ruff format --check .   # lint + formatting
+```
+
+The smoke test spins up a fake LLM server, then exercises the real app against it:
+UI serving, streamed chat, multi-turn history, feedback logging, escalation with
+transcript capture, and knowledge reload. Run it after any change.
+
 ## Pilot checklist (before company-wide rollout)
 
 - [ ] HR resolves the `⚠️ AMBIGUITY` items in `handbook.md` via `faq.md`
