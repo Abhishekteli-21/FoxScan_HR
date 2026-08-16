@@ -69,11 +69,26 @@ the useful ones into `knowledge/hrone_howto.md`, then `POST /api/reload`.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | — | Required |
-| `BOT_MODEL` | `claude-opus-5` | Model to use |
-| `BOT_EFFORT` | `medium` | `low` / `medium` / `high` — answer depth vs. speed |
+| `BOT_PROVIDER` | `anthropic` | `anthropic` \| `gemini` \| `groq` \| `openrouter` \| `custom` |
+| `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` / … | — | Key for the chosen provider |
+| `BOT_MODEL` | per provider | `claude-opus-5` (anthropic) / `gemini-3-flash` (gemini) |
+| `BOT_EFFORT` | `medium` | anthropic only: `low` / `medium` / `high` |
 | `BOT_MAX_TOKENS` | `2048` | Max answer length |
 | `HR_EMAIL`, `SMTP_*` | unset | Enable escalation emails |
+
+### Running it for free
+
+- **LLM**: `BOT_PROVIDER=gemini` with a free key from https://aistudio.google.com/apikey
+  (`gemini-3-flash`, 1M context, free implicit caching). ⚠️ **Google's free tier uses
+  prompts for training and may involve human review** — acceptable for a pilot; before
+  company-wide rollout either enable Gemini billing (a few $/month removes the training
+  clause) or switch back to `anthropic`. Groq is the free+private option but only after
+  a retrieval mode shrinks prompts (planned; not needed at current knowledge size).
+  NVIDIA's free endpoints are trial-only by their terms — not for production.
+- **Hosting**: the included `Dockerfile` deploys as-is to **Hugging Face Spaces**
+  (Docker Space, free CPU, effectively always-warm for a daily-used tool) or
+  **Render** free tier (sleeps after 15 min idle, ~1 min cold start). Set the `.env`
+  values as Space/Render secrets. No GPU needed anywhere — the model runs provider-side.
 
 ## Pilot checklist (before company-wide rollout)
 
