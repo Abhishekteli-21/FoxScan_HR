@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+data/
+.venv/
+venv/
+knowledge/hrone_howto_crawled.md
