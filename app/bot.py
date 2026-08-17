@@ -36,7 +36,10 @@ OPENAI_COMPAT_PRESETS = {
     "gemini": (
         "https://generativelanguage.googleapis.com/v1beta/openai/",
         "GEMINI_API_KEY",
-        "gemini-flash-latest",  # stable alias — always the current Flash model
+        # NOT "gemini-flash-latest": that alias points at the newest model, whose
+        # FREE-tier quota is tiny (~20 requests/day). 2.5-flash has ~250/day free.
+        # (2.5 series is slated for retirement around Oct 2026 — revisit then.)
+        "gemini-2.5-flash",
     ),
     "groq": ("https://api.groq.com/openai/v1", "GROQ_API_KEY", ""),
     "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY", ""),

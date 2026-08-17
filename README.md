@@ -3,8 +3,9 @@ title: UrbanRoof HR Assistant
 emoji: 🤝
 colorFrom: green
 colorTo: gray
-sdk: docker
-app_port: 7860
+sdk: gradio
+sdk_version: 6.24.0
+app_file: gradio_app.py
 pinned: false
 ---
 
