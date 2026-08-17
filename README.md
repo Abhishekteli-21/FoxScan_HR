@@ -23,7 +23,10 @@ and an HR-maintained FAQ.
 ## How it works
 
 ```
-Employee (web chat) ──► FastAPI server ──► Claude (claude-opus-5)
+Employee (web chat) ──► Gradio  (gradio_app.py)  ─┐
+                    └─► FastAPI (app/main.py)  ───┤
+                                                  ▼
+                                          app/bot.py ──► LLM (Claude / Gemini / …)
                                             │ system prompt contains the FULL
                                             │ knowledge base, prompt-cached
                                             │ (~90% discount after 1st request)
@@ -31,20 +34,28 @@ Employee (web chat) ──► FastAPI server ──► Claude (claude-opus-5)
                         data/feedback.jsonl    ◄── 👍/👎 buttons
 ```
 
-No vector database: the whole knowledge base (~20K tokens) fits in Claude's context and
-is served from Anthropic's prompt cache. Add retrieval only if `knowledge/` ever grows
-past ~100K tokens.
+Two front-ends, one brain. `gradio_app.py` is what Hugging Face's free tier runs;
+`app/main.py` is the FastAPI/SSE version for self-hosting. Both call the same
+`HRAssistant` in `app/bot.py`, so knowledge and behaviour never diverge.
+
+No vector database: the whole knowledge base (~20K tokens) fits in context and is served
+from the provider's prompt cache. Add retrieval only if `knowledge/` ever grows past
+~100K tokens.
 
 ## Setup
 
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env        # then put your ANTHROPIC_API_KEY inside
-uvicorn app.main:app --reload
+cp .env.example .env        # then put your provider's API key inside
 ```
 
-Open http://localhost:8000 — that's the chat.
+Then run whichever front-end you want:
+
+```bash
+python gradio_app.py                  # Gradio UI  → http://localhost:7860
+uvicorn app.main:app --reload         # FastAPI UI → http://localhost:8000
+```
 
 ## The knowledge base (`knowledge/`)
 
@@ -82,23 +93,26 @@ the useful ones into `knowledge/hrone_howto.md`, then `POST /api/reload`.
 |---|---|---|
 | `BOT_PROVIDER` | `anthropic` | `anthropic` \| `gemini` \| `groq` \| `openrouter` \| `custom` |
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` / … | — | Key for the chosen provider |
-| `BOT_MODEL` | per provider | `claude-opus-5` (anthropic) / `gemini-3-flash` (gemini) |
+| `BOT_MODEL` | per provider | `claude-opus-5` (anthropic) / `gemini-2.5-flash` (gemini) |
 | `BOT_EFFORT` | `medium` | anthropic only: `low` / `medium` / `high` |
 | `BOT_MAX_TOKENS` | `2048` | Max answer length |
 | `HR_EMAIL`, `SMTP_*` | unset | Enable escalation emails |
 
 ### Running it for free
 
-- **LLM**: `BOT_PROVIDER=gemini` with a free key from https://aistudio.google.com/apikey
-  (`gemini-3-flash`, 1M context, free implicit caching). ⚠️ **Google's free tier uses
-  prompts for training and may involve human review** — acceptable for a pilot; before
-  company-wide rollout either enable Gemini billing (a few $/month removes the training
-  clause) or switch back to `anthropic`. Groq is the free+private option but only after
-  a retrieval mode shrinks prompts (planned; not needed at current knowledge size).
-  NVIDIA's free endpoints are trial-only by their terms — not for production.
-- **Hosting**: the included `Dockerfile` deploys as-is to **Hugging Face Spaces**
-  (Docker Space, free CPU, effectively always-warm for a daily-used tool) or
-  **Render** free tier (sleeps after 15 min idle, ~1 min cold start). Set the `.env`
+- **LLM**: `BOT_PROVIDER=gemini` with a free key from https://aistudio.google.com/apikey.
+  Use **`gemini-2.5-flash`** (~250 free requests/day, 1M context, free implicit caching).
+  Avoid the `gemini-flash-latest` alias: it resolves to the newest model, whose free quota
+  is ~20 requests/day — too small for a chatbot. ⚠️ **Google's free tier uses prompts for
+  training and may involve human review** — acceptable for a pilot; before company-wide
+  rollout either enable Gemini billing (a few $/month removes the training clause) or
+  switch back to `anthropic`. Groq is the free+private option but only after a retrieval
+  mode shrinks prompts (planned; not needed at current knowledge size). NVIDIA's free
+  endpoints are trial-only by their terms — not for production.
+- **Hosting**: **Hugging Face Spaces** on the **Gradio** SDK (free CPU) — see
+  [DEPLOY.md](DEPLOY.md). Docker Spaces are now a paid feature, which is why
+  `gradio_app.py` exists; the `Dockerfile` is still there for **Render**'s free tier
+  (sleeps after 15 min idle, ~1 min cold start) or any container host. Set the `.env`
   values as Space/Render secrets. No GPU needed anywhere — the model runs provider-side.
 
 ## Tests & code quality
