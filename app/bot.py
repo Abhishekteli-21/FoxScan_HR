@@ -36,7 +36,7 @@ OPENAI_COMPAT_PRESETS = {
     "gemini": (
         "https://generativelanguage.googleapis.com/v1beta/openai/",
         "GEMINI_API_KEY",
-        "gemini-3-flash",
+        "gemini-flash-latest",  # stable alias — always the current Flash model
     ),
     "groq": ("https://api.groq.com/openai/v1", "GROQ_API_KEY", ""),
     "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY", ""),
@@ -122,7 +122,8 @@ class HRAssistant:
             self.model = MODEL or default_model
             if not self.model:
                 raise ConfigError(f"BOT_PROVIDER={PROVIDER} requires BOT_MODEL in .env")
-            self.client = OpenAI(base_url=base_url, api_key=api_key)
+            # Free tiers throw temporary 429/503s under load — retry generously.
+            self.client = OpenAI(base_url=base_url, api_key=api_key, max_retries=4)
         else:
             raise ConfigError(
                 f"Unknown BOT_PROVIDER '{PROVIDER}' — use anthropic, gemini, groq, openrouter, or custom"

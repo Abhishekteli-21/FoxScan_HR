@@ -92,7 +92,13 @@ def chat(body: ChatIn):
         except (
             Exception
         ) as exc:  # surface config errors (e.g. missing API key) to the UI
-            yield f"data: {json.dumps({'error': str(exc)})}\n\n"
+            msg = str(exc)
+            if any(t in msg for t in ("503", "429", "UNAVAILABLE", "overloaded")):
+                msg = (
+                    "The AI service is busy right now (free-tier limit). "
+                    "Please try again in a few seconds."
+                )
+            yield f"data: {json.dumps({'error': msg})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
