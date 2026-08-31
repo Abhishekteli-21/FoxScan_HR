@@ -1,6 +1,8 @@
 anthropic>=0.100.0
 openai>=1.60.0
-gradio>=5.0.0
 fastapi>=0.115.0
 uvicorn>=0.30.0
 python-dotenv>=1.0.0
+# gradio is deliberately NOT listed: Hugging Face installs the version pinned by
+# `sdk_version` in README.md, and leaving it out keeps the Vercel bundle small.
+# To run gradio_app.py locally:  pip install gradio==6.24.0
