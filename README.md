@@ -74,11 +74,18 @@ From a network that can reach the portal (office/home, not a cloud sandbox):
 
 ```bash
 pip install requests beautifulsoup4
-python scripts/crawl_help_portal.py --out knowledge/hrone_howto_crawled.md
+python scripts/crawl_help_portal.py          # → knowledge/hrone_howto_crawled.md
+git add knowledge/hrone_howto_crawled.md && git commit -m "Add crawled HROne articles"
+git push
 ```
 
-Review the output (the script flags articles whose steps are only screenshots), curate
-the useful ones into `knowledge/hrone_howto.md`, then `POST /api/reload`.
+The crawl output is committed on purpose: it is the only way the articles reach a cloud
+session, which cannot open the portal itself. Curate the useful ones into
+`knowledge/hrone_howto.md` (the script flags articles whose steps live only in
+screenshots), then `POST /api/reload` — or just push, which redeploys.
+
+Until that file has real steps, the assistant is instructed to say it doesn't have the
+screen-by-screen walkthrough rather than guess at HROne's UI.
 
 ## Escalation & feedback
 

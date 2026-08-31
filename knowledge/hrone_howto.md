@@ -3,11 +3,18 @@
 > This file holds step-by-step guides for using the HROne platform (apply leave, mark
 > attendance, download payslips, raise helpdesk tickets, …).
 >
-> **Status: placeholder.** Populate it by either:
-> 1. Running `python scripts/crawl_help_portal.py` from a network that can reach
->    https://employee-help.hrone.cloud/ (see the script's header for usage), then
->    pasting/curating the output here, or
-> 2. Having HR paste their own step-by-step instructions below.
+> **Status: placeholder.** The help portal is unreachable from cloud sandboxes, so the
+> crawl has to run on a machine inside a normal network and travel back through git:
+>
+> ```bash
+> pip install requests beautifulsoup4
+> python scripts/crawl_help_portal.py          # → knowledge/hrone_howto_crawled.md
+> git add knowledge/hrone_howto_crawled.md && git commit -m "Add crawled HROne articles"
+> git push
+> ```
+>
+> The curated articles then get merged into this file. HR can equally well paste their
+> own step-by-step instructions below — either source works.
 >
 > Until real steps are added, the assistant will say what CAN be done in HROne and point
 > employees to the official help portal rather than inventing UI steps.
