@@ -58,14 +58,6 @@ def index():
     return FileResponse(ROOT / "static" / "index.html")
 
 
-@app.get("/api/portal")
-def portal(path: str = "/"):
-    """TEMPORARY knowledge-building helper — see app/portal.py. Remove when done."""
-    from .portal import read
-
-    return read(path)
-
-
 @app.get("/api/health")
 def health():
     """Deploy check: is a provider key actually reachable from this instance?
