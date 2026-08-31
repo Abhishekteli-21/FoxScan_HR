@@ -59,6 +59,8 @@ Rules you must always follow:
    HROne How-To Guides, HR FAQ). Never invent policy details, numbers, dates, or HROne
    UI steps that are not in the sources. If the sources don't contain the answer, say
    so plainly and tell the employee to use the "Send to HR" button so a human can help.
+   That button is in THIS chat window, underneath the answer — it is not part of HROne,
+   so never tell anyone to look for it there.
    Never describe an HROne screen, menu, tab or button that is not written in the HROne
    How-To Guides. If those steps are missing, say directly that you don't have the
    screen-by-screen steps yet, answer whatever part of the question is policy, and point
@@ -70,8 +72,14 @@ Rules you must always follow:
    honestly present what the handbook says (including the contradiction), and advise the
    employee to confirm with HR. Answers in the HR FAQ override the handbook.
 4. PRIORITY OF SOURCES — HR FAQ > Employee Handbook > HROne How-To Guides.
-5. STYLE — Reply in the language the employee writes in (English or Hindi/Hinglish are
-   both fine). Keep answers short and simple: lead with the direct answer, then only the
+   One correction applies across the whole handbook: individual sections still say to
+   apply for leave or WFH "by email", but the company has moved to HROne (see "Leave
+   Policy — General Rules"). Whenever you repeat one of those procedures, keep the
+   handbook's deadlines and say the request is submitted through HROne.
+5. STYLE — Match the language of the employee's MOST RECENT message: English question →
+   English answer, Hindi/Hinglish question → Hindi/Hinglish answer. Never switch language
+   on your own, and never carry a language over from an earlier turn. Keep answers short
+   and simple: lead with the direct answer, then only the
    details that matter (limits, deadlines, documents needed). Use bullet points for
    lists. No legal jargon.
 6. SCOPE — You cannot see any employee's personal records (balances, payslips,
@@ -83,6 +91,15 @@ Rules you must always follow:
    disputes, medical emergencies), give the relevant policy info AND encourage
    contacting HR directly — these must involve a human.
 """
+
+
+# Repeated after the knowledge block, where it sits closest to the conversation.
+# Rule 5 alone was not enough: the model kept answering English questions in Hindi,
+# and instructions this far from the user turn get diluted by 18K characters of policy.
+CLOSING_REMINDER = """\
+REMINDER BEFORE YOU ANSWER: reply in the SAME language as the employee's latest message \
+(English question → English answer). Cite your source. If the answer is not in the \
+sources above, say so and point to the "Send to HR" button in this chat."""
 
 
 def load_knowledge() -> str:
@@ -171,6 +188,7 @@ class HRAssistant:
                 "text": self.knowledge,
                 "cache_control": {"type": "ephemeral"},
             },
+            {"type": "text", "text": CLOSING_REMINDER},
         ]
         with self.client.messages.stream(
             model=self.model,
@@ -188,7 +206,14 @@ class HRAssistant:
         # One system message; instructions + knowledge first and byte-stable across
         # requests so Gemini's implicit caching can latch onto the shared prefix.
         messages = [
-            {"role": "system", "content": INSTRUCTIONS + "\n\n" + self.knowledge}
+            {
+                "role": "system",
+                "content": INSTRUCTIONS
+                + "\n\n"
+                + self.knowledge
+                + "\n\n"
+                + CLOSING_REMINDER,
+            }
         ]
         messages += history
         stream = self.client.chat.completions.create(

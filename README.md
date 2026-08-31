@@ -109,7 +109,10 @@ screen-by-screen walkthrough rather than guess at HROne's UI.
 ### Running it for free
 
 - **LLM**: `BOT_PROVIDER=gemini` with a free key from https://aistudio.google.com/apikey.
-  Use **`gemini-2.5-flash`** (~250 free requests/day, 1M context, free implicit caching).
+  Use **`gemini-2.5-flash`** (1M context, free implicit caching). The free tier caps at
+  **5 requests/minute** as well as ~250/day — fine for a pilot, but a handful of employees
+  chatting at once will hit 429s, which the UI reports as "the AI service is busy".
+  Enabling billing lifts both limits.
   Avoid the `gemini-flash-latest` alias: it resolves to the newest model, whose free quota
   is ~20 requests/day — too small for a chatbot. ⚠️ **Google's free tier uses prompts for
   training and may involve human review** — acceptable for a pilot; before company-wide

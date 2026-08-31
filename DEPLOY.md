@@ -92,7 +92,7 @@ Check the Space's **Logs** tab:
 |---|---|---|
 | `ModuleNotFoundError: gradio` | Space built with the wrong SDK | README frontmatter must say `sdk: gradio` and `app_file: gradio_app.py` |
 | Gradio version errors on startup | HF picked a different Gradio version | The frontmatter pins `sdk_version: 6.24.0`, the version this UI is tested on |
-| Chat replies "AI service is busy" | Free Gemini quota hit, or key missing | Confirm the `GEMINI_API_KEY` secret and `BOT_PROVIDER=gemini` variable; free tier is ~250 requests/day on `gemini-2.5-flash` |
+| Chat replies "AI service is busy" | Free Gemini quota hit, or key missing | Confirm the `GEMINI_API_KEY` secret; the free tier allows only **5 requests/minute** (~250/day) on `gemini-2.5-flash`, so concurrent users trip it |
 
 ## Updating later
 
