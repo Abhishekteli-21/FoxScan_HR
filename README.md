@@ -109,17 +109,27 @@ screen-by-screen walkthrough rather than guess at HROne's UI.
 ### Running it for free
 
 - **LLM**: `BOT_PROVIDER=gemini` with a free key from https://aistudio.google.com/apikey.
-  Use **`gemini-2.5-flash`** (1M context, free implicit caching). The free tier caps at
-  **5 requests/minute** as well as ~250/day — fine for a pilot, but a handful of employees
-  chatting at once will hit 429s, which the UI reports as "the AI service is busy".
-  Enabling billing lifts both limits.
-  Avoid the `gemini-flash-latest` alias: it resolves to the newest model, whose free quota
-  is ~20 requests/day — too small for a chatbot. ⚠️ **Google's free tier uses prompts for
-  training and may involve human review** — acceptable for a pilot; before company-wide
-  rollout either enable Gemini billing (a few $/month removes the training clause) or
-  switch back to `anthropic`. Groq is the free+private option but only after a retrieval
-  mode shrinks prompts (planned; not needed at current knowledge size). NVIDIA's free
-  endpoints are trial-only by their terms — not for production.
+  Use **`gemini-2.5-flash`** (1M context, free implicit caching).
+
+  ⚠️ **The free tier is far smaller than the published figures suggest.** Google's own 429
+  response for this project reported `GenerateRequestsPerDayPerProjectPerModel-FreeTier,
+  quotaValue: 20` — twenty requests per day, plus a 5/minute ceiling. That is a demo
+  budget, not a pilot budget: twenty questions company-wide and the bot is done for the
+  day. Check your own key's limits from its 429 text rather than trusting any blog table,
+  including this one.
+
+  `gemini-2.5-flash-lite` has a much larger free allowance and was tested as a way out.
+  **Rejected:** asked how to apply for leave, it invented a five-step HROne walkthrough
+  ("Log in… navigate to the leave application section…") that appears nowhere in the
+  knowledge base. A model that fabricates UI steps is disqualified here no matter how
+  generous its quota, because a confidently wrong answer is the one failure this
+  assistant exists to prevent.
+
+  So for anything past a demo: enable billing on the Gemini key (a few dollars a month at
+  this volume, and it also removes the free tier's train-on-your-prompts clause), or set
+  `BOT_PROVIDER=anthropic`. Groq is the free-and-private option, but only once retrieval
+  shrinks the prompt. NVIDIA's free endpoints are trial-only by their terms.
+
 - **Hosting** (both free, both documented in [DEPLOY.md](DEPLOY.md)):
   - **Vercel** runs the FastAPI front-end straight from this repo — `api/index.py` plus
     `vercel.json` are all it needs, and every push to this branch redeploys.
