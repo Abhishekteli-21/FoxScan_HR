@@ -1,15 +1,40 @@
 """Escalation/feedback logging and optional HR email — shared by both front-ends
-(FastAPI in app/main.py and Gradio in app.py)."""
+(FastAPI in app/main.py and Gradio in gradio_app.py)."""
 
 import json
 import os
 import smtplib
+import tempfile
 import time
 from email.message import EmailMessage
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-DATA_DIR.mkdir(exist_ok=True)
+
+def _resolve_data_dir() -> Path:
+    """Pick a writable directory for the JSONL logs.
+
+    Serverless hosts (Vercel, Lambda) mount the code read-only and only allow
+    writes under /tmp, so fall back there instead of failing at import time.
+    Set DATA_DIR to keep logs somewhere durable.
+    """
+    candidates = []
+    if os.environ.get("DATA_DIR"):
+        candidates.append(Path(os.environ["DATA_DIR"]))
+    candidates.append(Path(__file__).resolve().parent.parent / "data")
+    candidates.append(Path(tempfile.gettempdir()) / "hr-assistant-data")
+    for path in candidates:
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+            return path
+        except OSError:
+            continue
+    return candidates[-1]
+
+
+DATA_DIR = _resolve_data_dir()
+# True when logs land in a temp dir that the host wipes between runs — the UI
+# still works, but escalations only survive if HR email (SMTP_*) is configured.
+EPHEMERAL_STORAGE = DATA_DIR.parent == Path(tempfile.gettempdir())
 
 
 def append_jsonl(filename: str, record: dict) -> None:

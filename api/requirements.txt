@@ -1,0 +1,6 @@
+# Vercel installs these for the serverless function. Deliberately slimmer than
+# the root requirements.txt: no gradio (that front-end is for Hugging Face) and
+# no uvicorn (Vercel provides the ASGI server).
+fastapi>=0.115.0
+openai>=1.60.0
+python-dotenv>=1.0.0
