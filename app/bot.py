@@ -25,7 +25,9 @@ from pathlib import Path
 
 KNOWLEDGE_DIR = Path(__file__).resolve().parent.parent / "knowledge"
 
-PROVIDER = os.environ.get("BOT_PROVIDER", "anthropic").lower()
+# Defaults to gemini: it is the provider this pilot runs on, and its free tier
+# means a fresh deploy only needs GEMINI_API_KEY set to start answering.
+PROVIDER = os.environ.get("BOT_PROVIDER", "gemini").lower()
 MODEL = os.environ.get("BOT_MODEL", "")
 EFFORT = os.environ.get("BOT_EFFORT", "medium")  # anthropic only
 MAX_TOKENS = int(os.environ.get("BOT_MAX_TOKENS", "2048"))

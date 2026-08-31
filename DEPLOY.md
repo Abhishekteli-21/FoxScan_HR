@@ -1,4 +1,36 @@
-# Deploy to Hugging Face Spaces (free) — 5 minutes
+# Deploying FoxScan HR
+
+Two free hosts are set up. **Vercel** serves the FastAPI front-end and deploys itself
+from GitHub; **Hugging Face** serves the Gradio front-end and needs a manual push. Pick
+either — they run the same bot off the same knowledge base.
+
+---
+
+# Option A — Vercel (free, auto-deploys on every push)
+
+The repo already contains everything Vercel needs (`api/index.py`, `vercel.json`), and
+the project is linked to this GitHub repo, so **pushing to `claude/current-model-e83gvk`
+redeploys automatically**.
+
+The only manual step is the API key, because secrets are never stored in git:
+
+1. Open the project → **Settings** → **Environment Variables**
+2. Add `GEMINI_API_KEY` = your key from https://aistudio.google.com/apikey
+   (leave the environment boxes checked for Production, Preview and Development)
+3. **Deployments** tab → newest deployment → **⋯** → **Redeploy**, so the running
+   function picks the new variable up
+
+`BOT_PROVIDER` defaults to `gemini`, so no second variable is needed. To use Claude
+instead, add `BOT_PROVIDER=anthropic` and `ANTHROPIC_API_KEY`.
+
+**Note on serverless storage:** Vercel's filesystem is read-only apart from a temp
+directory, so `data/escalations.jsonl` does **not** survive there. Configure the SMTP
+variables (`HR_EMAIL`, `SMTP_*`) so escalations reach HR by email, or run the Hugging
+Face / Render deployment when durable transcript logs matter.
+
+---
+
+# Option B — Hugging Face Spaces (free) — 5 minutes
 
 Hugging Face made **Docker** Spaces a paid feature, so the free path is the **Gradio**
 SDK. That's what `gradio_app.py` and the README frontmatter are set up for — same bot,

@@ -47,6 +47,7 @@ from the provider's prompt cache. Add retrieval only if `knowledge/` ever grows 
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+pip install gradio==6.24.0  # only if you want to run the Gradio UI locally
 cp .env.example .env        # then put your provider's API key inside
 ```
 
@@ -91,7 +92,7 @@ the useful ones into `knowledge/hrone_howto.md`, then `POST /api/reload`.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `BOT_PROVIDER` | `anthropic` | `anthropic` \| `gemini` \| `groq` \| `openrouter` \| `custom` |
+| `BOT_PROVIDER` | `gemini` | `anthropic` \| `gemini` \| `groq` \| `openrouter` \| `custom` |
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` / … | — | Key for the chosen provider |
 | `BOT_MODEL` | per provider | `claude-opus-5` (anthropic) / `gemini-2.5-flash` (gemini) |
 | `BOT_EFFORT` | `medium` | anthropic only: `low` / `medium` / `high` |
@@ -109,11 +110,16 @@ the useful ones into `knowledge/hrone_howto.md`, then `POST /api/reload`.
   switch back to `anthropic`. Groq is the free+private option but only after a retrieval
   mode shrinks prompts (planned; not needed at current knowledge size). NVIDIA's free
   endpoints are trial-only by their terms — not for production.
-- **Hosting**: **Hugging Face Spaces** on the **Gradio** SDK (free CPU) — see
-  [DEPLOY.md](DEPLOY.md). Docker Spaces are now a paid feature, which is why
-  `gradio_app.py` exists; the `Dockerfile` is still there for **Render**'s free tier
-  (sleeps after 15 min idle, ~1 min cold start) or any container host. Set the `.env`
-  values as Space/Render secrets. No GPU needed anywhere — the model runs provider-side.
+- **Hosting** (both free, both documented in [DEPLOY.md](DEPLOY.md)):
+  - **Vercel** runs the FastAPI front-end straight from this repo — `api/index.py` plus
+    `vercel.json` are all it needs, and every push to this branch redeploys.
+  - **Hugging Face Spaces** runs the Gradio front-end on the **Gradio** SDK (free CPU).
+    Docker Spaces are now a paid feature, which is why `gradio_app.py` exists.
+  - The `Dockerfile` still covers **Render**'s free tier (sleeps after 15 min idle,
+    ~1 min cold start) or any container host.
+
+  Set the `.env` values as the host's secrets. No GPU needed anywhere — the model runs
+  provider-side.
 
 ## Tests & code quality
 
