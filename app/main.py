@@ -20,8 +20,9 @@ from pydantic import BaseModel
 
 load_dotenv()
 
-from .bot import HRAssistant  # noqa: E402  (needs env loaded first)
+from .bot import MODEL, PROVIDER, HRAssistant  # noqa: E402  (needs env loaded first)
 from .notify import (  # noqa: E402
+    EPHEMERAL_STORAGE,
     append_jsonl,
     escalation_email_body,
     friendly_error,
@@ -55,6 +56,28 @@ class FeedbackIn(BaseModel):
 @app.get("/")
 def index():
     return FileResponse(ROOT / "static" / "index.html")
+
+
+@app.get("/api/health")
+def health():
+    """Deploy check: is a provider key actually reachable from this instance?
+
+    Answers the question a hosted deploy always raises — did the secret land? —
+    without sending a chat message. Never returns the key itself.
+    """
+    try:
+        assistant._ensure_client()
+        ok, detail = True, ""
+    except Exception as exc:
+        ok, detail = False, friendly_error(exc)
+    return {
+        "ok": ok,
+        "provider": PROVIDER,
+        "model": assistant.model or MODEL or "(unset)",
+        "knowledge_chars": len(assistant.knowledge),
+        "storage": "ephemeral" if EPHEMERAL_STORAGE else "persistent",
+        "detail": detail,
+    }
 
 
 @app.post("/api/chat")
