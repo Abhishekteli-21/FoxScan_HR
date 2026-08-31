@@ -6,3 +6,4 @@ python-dotenv>=1.0.0
 # gradio is deliberately NOT listed: Hugging Face installs the version pinned by
 # `sdk_version` in README.md, and leaving it out keeps the Vercel bundle small.
 # To run gradio_app.py locally:  pip install gradio==6.24.0
+httpx>=0.27.0
